@@ -2,7 +2,8 @@
 #define GAME_H
 
 
-#define Coord pair<int,int>
+#define Move pair< Coord , Coord >
+#define Coord pair< int , int >
 
 #include <iostream>
 #include <vector>
@@ -14,14 +15,20 @@ using namespace std;
 class Game{
 	private:
 		Board* board;
+		int globalcutoff;
 	public:
 		Game(int _board_size);
-		bool isGameOver();
-		vector< Coord > getPossibleOrderMoves(Coord position);
-		Coord chaosRandom();
-		pair< Coord, Coord > orderRandom();
-		bool makeChaosMove(Coord position, char c);
-		bool makeOrderMove(pair< Coord, Coord> move);
+		vector< Coord > getPossibleOrderMoves(Coord position , Board b);
+		Coord chaosRandomAction();
+		Move orderRandomAction();
+		Move getOrderActionFromBoard(Board &b1, Board &b2);
+		Coord getChaosActionFromBoard(Board &b1, Board &b2);
+		Coord chaosAIAction(char &color);
+		Move orderAIAction();
+		pair< Move , double > orderHelper(Board b , int cutoff);
+		pair < Coord , double > chaosHelper(Board b , int cutoff , char color);
+		void makeChaosMove(Coord position, char c);
+		void makeOrderMove(pair< Coord, Coord> move);
 		void playAsOrder();
 		void playAsChaos();
 };

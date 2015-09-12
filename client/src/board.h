@@ -11,11 +11,17 @@ class Board{
 		vector< vector<char>* >* board;
 	public:
 		Board(int _board_size);
+		Board& operator = (const Board &b);
+		Board(const Board &b);
 		void printBoard();
 		int getBoardSize();
-		bool setColor(int i, int j, char c);
+		bool isGameOver();
+		void setColor(int i, int j, char c);
 		char getColor(int i, int j);
-		bool moveColor(int i, int j, int p, int q);
+		void moveColor(int i, int j, int p, int q);
+		bool isOk(int x , int m , string &s);
+		int scoreHelper(string &s);
+		int calculateScore();
 };
 
 
