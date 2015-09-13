@@ -64,14 +64,14 @@ void Game::makeOrderMove(pair< Coord, Coord> move){
 pair< Move , double > Game::orderHelper(Board& b , int cutoff, double alpha , double beta)
 {
 	if(cutoff == 0 or b.isGameOver())
-		return (make_pair( (  make_pair( make_pair(0,0) , make_pair(0,0) )  ) , b.calculateScore()));
+		return (make_pair( (  make_pair( make_pair(0,0) , make_pair(0,0) )  ) , b.evalFunction()));
 	vector<Board> possible_boards;
 	vector<Move> moves_used;
 	char colors[] = {'A' , 'B' , 'C' , 'D' , 'E'};
-	int colorsused[5];
+	vector<int> colorsused(5,0);
 	for(int i = 0 ; i < b.getBoardSize() ; ++i)
 	{
-		for(int j = 0 ; 	j < b.getBoardSize() ; ++j)
+		for(int j = 0 ; j < b.getBoardSize() ; ++j)
 		{
 			char color = b.getColor(i,j);
 
@@ -83,12 +83,7 @@ pair< Move , double > Game::orderHelper(Board& b , int cutoff, double alpha , do
 				{
 					Coord final_pos = possible_moves.back();
 					b.moveColor(i,j,final_pos.first,final_pos.second);
-
-
 					possible_boards.push_back(b);
-
-
-
 					b.moveColor(final_pos.first,final_pos.second,i,j);
 					moves_used.push_back(make_pair(make_pair(i,j) , possible_moves.back()));
 					possible_moves.pop_back();
@@ -99,7 +94,7 @@ pair< Move , double > Game::orderHelper(Board& b , int cutoff, double alpha , do
 	int totalcolorsremaining = 0;
 	for(int i = 0 ; i < 5 ; ++i)
 		totalcolorsremaining += (5 - colorsused[i]);
-	double current_max = 0;
+	double current_max = -1000000;
 	int location = 0;
 	for(int i = 0 ; i < possible_boards.size() ; ++i)
 	{
@@ -118,15 +113,18 @@ pair< Move , double > Game::orderHelper(Board& b , int cutoff, double alpha , do
 		alpha = max(alpha , expectedvalue);
 		if(alpha >= beta)
 			return (make_pair( moves_used.at(i), -1));
-		if(current_max <= expectedvalue)
+		if(current_max < expectedvalue)
 		{
 			current_max = expectedvalue;
 			location = i;
 		}
 	}
 	
-	//Move best_move = getOrderActionFromBoard(b , possible_boards.at(location));
-	return (make_pair(moves_used.at(location) , current_max));
+	Move best_move = moves_used.at(location);
+	if(current_max > b.evalFunction())
+		return (make_pair(best_move , current_max));
+	else
+		return (make_pair(make_pair(best_move.first , best_move.first) , b.evalFunction()));
 }
 
 
@@ -134,8 +132,8 @@ pair< Move , double > Game::orderHelper(Board& b , int cutoff, double alpha , do
 pair < Coord , double > Game::chaosHelper(Board& b , int cutoff , char col , double alpha , double  beta)
 {
 	if(cutoff == 0 or b.isGameOver())
-		return make_pair(make_pair(0,0) , b.calculateScore());
-	double minscore = 10000000;		 		// b.calculateScore() no need of this put in the evaluation function here instead of 2^31
+		return make_pair(make_pair(0,0) , b.evalFunction());
+	double minscore = 10000000;
 	int mini = -1 , minj = -1;
 	for(int i = 0 ; i < b.getBoardSize() ; ++i)
 	{
