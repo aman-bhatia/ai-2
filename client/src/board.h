@@ -11,6 +11,7 @@ class Board{
 		vector< vector<char>* >* board;
 	public:
 		Board(int _board_size);
+		~Board();
 		Board& operator = (const Board &b);
 		Board(const Board &b);
 		void printBoard();

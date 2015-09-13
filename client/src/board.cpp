@@ -13,6 +13,17 @@ Board::Board(int _board_size){
 		board->push_back(temp);
 	}
 }
+
+Board::~Board()
+{
+	for(int i = 0 ; i < board->size() ; ++i)
+	{
+		delete board->at(i);
+	}
+	delete board;
+}
+
+
 bool Board::isGameOver(){
 	for (int i=0; i<board_size; i++){
 		for (int j=0; j<board_size; j++){
