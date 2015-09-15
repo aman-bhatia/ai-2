@@ -15,7 +15,8 @@ using namespace std;
 class Game{
 	private:
 		Board* board;
-		int globalcutoff;
+		int globalcutoff_order;
+		int globalcutoff_chaos;
 	public:
 		Game(int _board_size);
 		~Game();

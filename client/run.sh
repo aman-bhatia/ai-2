@@ -3,5 +3,5 @@
 
 # FOR c++
 cd src
-g++ main.cpp board.cpp game.cpp
+#g++ main.cpp board.cpp game.cpp
 ./a.out

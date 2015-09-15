@@ -7,12 +7,12 @@ Board::Board(int _board_size){
 	board_size = _board_size;
 	board = new vector< vector<char>* >(0);
 	//colors_available = new vector<int>(board_size,board_size); 
-	//num_cells_free = board_size*board_size;
+	num_cells_free = board_size*board_size;
 	
 	
-	weights = new vector< vector<int>* >(0);
+	weights = new vector< vector<double>* >(0);
 	for (int i=0; i<board_size; i++){
-		vector<int>* temp  = new vector<int>(board_size, 0);
+		vector<double>* temp  = new vector<double>(board_size, 0);
 		weights->push_back(temp);
 	}
 
@@ -30,7 +30,7 @@ Board::Board(int _board_size){
 
 	weights->at(2)->at(0) = 4;
 	weights->at(2)->at(1) = 8;
-	weights->at(2)->at(2) = 10;
+	weights->at(2)->at(2) = 12;
 	weights->at(2)->at(3) = 8;
 	weights->at(2)->at(4) = 4;
 
@@ -80,13 +80,13 @@ Board::Board(const Board &b)
 	for (int i=0;i<board_size;i++){
 		colors_available->at(i) = b.getColorAvailable(i);
 	}
+	*/
 	
 	num_cells_free = b.getNumCellsFree();
-	*/
 
-	weights = new vector< vector<int>* >(0);
+	weights = new vector< vector<double>* >(0);
 	for (int i=0; i<board_size; i++){
-		vector<int>* temp  = new vector<int>(board_size, 0);
+		vector<double>* temp  = new vector<double>(board_size, 0);
 		weights->push_back(temp);
 	}
 
@@ -115,9 +115,9 @@ Board& Board::operator=(const Board &b)
 		board_size = b.board_size;
 		board = new vector< vector<char>* >(0);
 		
-		weights = new vector< vector<int>* >(0);
+		weights = new vector< vector<double>* >(0);
 		for (int i=0; i<board_size; i++){
-			vector<int>* temp  = new vector<int>(board_size, 0);
+			vector<double>* temp  = new vector<double>(board_size, 0);
 			weights->push_back(temp);
 		}
 
@@ -127,8 +127,8 @@ Board& Board::operator=(const Board &b)
 			colors_available->at(i) = b.getColorAvailable(i);
 		}
 		
-		num_cells_free = b.getNumCellsFree();
 		*/
+		num_cells_free = b.getNumCellsFree();
 
 		for (int i=0; i<board_size; i++){
 			for(int j = 0 ; j < board_size;++j){
@@ -171,6 +171,7 @@ int Board::getBoardSize() const{
 
 
 bool Board::isGameOver(){
+	/*
 	for (int i=0; i<board_size; i++){
 		for (int j=0; j<board_size; j++){
 			if (board->at(i)->at(j) == '-')
@@ -178,6 +179,8 @@ bool Board::isGameOver(){
 		}
 	}
 	return true;
+	*/
+	return (num_cells_free == 0);
 }
 
 
@@ -185,15 +188,33 @@ bool Board::isGameOver(){
  * Sets color of the cell at (i,j) to c
  */
 void Board::setColor(int i, int j, char c){
-	/*
+	
 	if (c == '-'){
-		colors_available->at(board->at(i)->at(j) - 'A')++;
+		//colors_available->at(board->at(i)->at(j) - 'A')++;
 		num_cells_free++;
+
+		if(i + 1 < board_size)
+			setWeight(i + 1 , j , (2 * getWeight(i + 1 , j) / 3));
+		if(i - 1 >= 0)
+			setWeight(i - 1 , j , (2 * getWeight(i - 1 , j) / 3));
+		if(j + 1 < board_size)
+			setWeight(i , j + 1 , (2 * getWeight(i , j + 1) / 3));
+		if(j - 1 >= 0)
+			setWeight(i , j - 1 , (2 * getWeight(i , j - 1) / 3));
 	} else {
-		colors_available->at(c - 'A')--;
+		//colors_available->at(c - 'A')--;
 		num_cells_free--;
+
+		if(i + 1 < board_size)
+			setWeight(i + 1 , j , (3 * getWeight(i + 1 , j)) / 2);
+		if(i - 1 >= 0)
+			setWeight(i - 1 , j , (3 * getWeight(i - 1 , j)) / 2);
+		if(j + 1 < board_size)
+			setWeight(i , j + 1 , (3 * getWeight(i , j + 1)) / 2);
+		if(j - 1 >= 0)
+			setWeight(i , j - 1 , (3 * getWeight(i , j - 1)) / 2);
 	}
-	*/
+
 	board->at(i)->at(j) = c;
 }
 
@@ -213,8 +234,8 @@ void Board::moveColor(int i, int j, int p, int q){
 	if (i==p && j==q)
 		return;
 	
-	board->at(p)->at(q) = board->at(i)->at(j);
-	board->at(i)->at(j) = '-';
+	setColor(p,q, board->at(i)->at(j));
+	setColor(i,j,'-');
 }
 
 
@@ -262,11 +283,63 @@ int Board::scoreHelper(string &s)
   return score;
 }
 
-
-
-int Board::extraHelper()
+double Board::scoreHelper1(string &s , int row , bool isrow)
 {
-	int score = 0;
+	int max = s.size();
+	double score = 0;
+	for(int i = 1 ; i < max ; ++i)
+	{
+		double tempscore = 0;
+		double scoreX = 0;
+		int right = i;
+		int left = i - 1;
+		while(isOk(right , max , s) && isOk(left , max , s) && (s[left] == s[right]))
+		{
+			if (isrow)
+				tempscore += weights->at(row)->at(left) + weights->at(row)->at(right);
+			else
+				tempscore += weights->at(left)->at(row) + weights->at(right)->at(row);
+			scoreX +=  tempscore;
+			right += 1;
+			left -= 1;
+		}
+		score += scoreX;
+		if (isrow)
+			tempscore = weights->at(row)->at(i);
+		else
+			tempscore = weights->at(i)->at(row);
+		scoreX = 0;
+		right = i + 1;
+		left = i - 1;
+		while(isOk(right , max , s) && isOk(left , max , s) && (s[left] == s[right]) && isOk((right+left)/2, max, s))
+		{
+			if (isrow)
+				tempscore += weights->at(row)->at(left) + weights->at(row)->at(right);
+			else
+				tempscore += weights->at(left)->at(row) + weights->at(right)->at(row);
+			scoreX +=  tempscore;
+			right += 1;
+			left -= 1;
+		}
+		score += scoreX;
+	}
+  return score;
+}
+
+
+int Board::getWeight(int i, int j) const{
+	return weights->at(i)->at(j);
+}
+
+
+void Board::setWeight(int i , int j , int w)
+{
+	weights->at(i)->at(j) = w;
+}
+
+double Board::extraHelper()
+{
+	double score = 0;
 	for(int i = 0 ; i < 5 ; ++i)
 		for(int j = 0 ; j < 5 ; ++j)
 			if(board->at(i)->at(j) != '-')
@@ -299,18 +372,94 @@ int Board::calculateScore()
 	return score;
 }
 
-/*
+
+
+double Board::calculateScore1()
+{
+	double score = 0;
+	for(int i = 0 ; i < board_size ; ++i)
+	{
+		string str( (board->at(i))->begin() , (board->at(i))->end() );
+		score += scoreHelper1(str , i , true);
+	}
+	for(int i = 0 ; i < board_size ; ++i)
+	{
+		string temp = "";
+		for(int j = 0 ; j < board_size ; ++j)
+		{
+		temp += (board->at(j)->at(i));
+		}
+		score += scoreHelper1(temp , i , false);
+	}
+	return score;
+}
+
+
+int Board::calculateScorea()
+{
+	int score = 0;
+	for(int i = 0 ; i < board_size ; ++i)
+	{
+		string str( (board->at(i))->begin() , (board->at(i))->end() );
+		score += alternato(str);
+	}
+	for(int i = 0 ; i < board_size ; ++i)
+	{
+		string temp = "";
+		for(int j = 0 ; j < board_size ; ++j)
+		{
+		temp += (board->at(j)->at(i));
+		}
+		score += alternato(temp);
+	}
+	return score;
+}
+
+
+
 int Board::getNumCellsFree() const{
 	return num_cells_free;
 }
-*/
 
-
-int Board::getWeight(int i, int j) const{
-	return weights->at(i)->at(j);
+int Board::alternato(string& s)
+{
+	int count = 0;
+	for(int i = 0 ; i < s.size() ; ++i)	
+	{
+		// AA
+		if(i + 1 < s.size() and s[i] == s[i + 1] and s[i] != '-')
+			count += 2;
+		// A-A
+		if(i + 2 < s.size() and s[i] == s[i + 2] and s[i] != '-')
+			count += 6;
+		//A--A
+		if(i + 3 < s.size() and s[i] == s[i + 3] and s[i+1]==s[i+3] and s[i+1]=='-' and s[i] != '-')
+			count += 5;
+		//AA-A
+		if(i + 3 < s.size() and s[i] == s[i + 3] and s[i+1]==s[i] and s[i+2]=='-' and s[i] != '-')
+			count += 6;
+		// ABBA
+		if(i + 3 < s.size() and s[i] == s[i + 3] and s[i + 1] == s[i + 2] and s[i + 1] != '-' and s[i] != '-')
+			count += 7;
+		// AAAA
+		if(i + 3 < s.size() and s[i] == s[i + 1] and s[i + 1] == s[i + 2] and s[i + 2] == s[i + 3] and s[i] != '-')
+			count += 10;
+		// AB-BA
+		if(i + 4 < s.size() and s[i] == s[i + 4] and s[i + 1] == s[i + 3] and s[i] != '-' and s[i + 1] != '-')
+			count += 8;
+		// A-C-A
+		if(i + 4 < s.size() and s[i] == s[i + 4] and s[i + 1] == s[i + 3] and s[i] != '-' and s[i + 2] != '-')
+			count += 8;
+	
+		// AAA
+		if(i + 4 < s.size() and s[i] == s[i + 1] and s[i + 1] == s[i + 2] and s[i] != '-')
+			count += 10;
+		// A-A-A
+		if(i + 4 < s.size() and s[i] == s[i + 4] and s[i] == s[i + 2] and s[i] != '-')
+			count += 10;
+	}
+	return count;
 }
-
-
 
 /*
 int Board::getColorAvailable(int index) const{
@@ -318,223 +467,9 @@ int Board::getColorAvailable(int index) const{
 }
 */
 
-int Board::evalFunction(){
-/*
-	// for 2 sized palindromes
-	int score2 = 0;
-	// horizontal scan
-	for (int i=0; i<board_size; i++)
-	{
-		for (int j=0; j<board_size-1; j++)
-		{
-			if (board->at(i)->at(j) == '-')
-			{
-				if (board->at(i)->at(j+1) == '-')
-				{
-					// scan in the colors used vector
-					for (int k=0; k<board_size; k++)
-					{
-						if (colors_available->at(k) >= 2)
-							score2++;
-					}
-				}
-				else
-				{
-					// check if the same color is available
-					if (colors_available->at(board->at(i)->at(j+1) - 'A') >= 1)
-							score2++;
-				}
-			}
-			else
-			{
-				if (board->at(i)->at(j+1) == '-')
-				{
-					// check if the same color is available
-					if (colors_available->at(board->at(i)->at(j) - 'A') >= 1)
-							score2++;
-				}
-			}
-		}
-	}
-
-	// vertical scan
-	for (int i=0; i<board_size-1; i++)
-	{
-		for (int j=0; j<board_size; j++)
-		{
-			if (board->at(j)->at(i) == '-')
-			{
-				if (board->at(j)->at(i+1) == '-')
-				{
-					// scan in the colors used vector
-					for (int k=0; k<board_size; k++)
-					{
-						if (colors_available->at(k) >= 2)
-							score2++;
-					}
-				}
-				else
-				{
-					// check if the same color is available
-					if (colors_available->at(board->at(j)->at(i+1) - 'A') >= 1)
-							score2++;
-				}
-			}
-			else
-			{
-				if (board->at(j)->at(i+1) == '-')
-				{
-					// check if the same color is available
-					if (colors_available->at(board->at(j)->at(i) - 'A') >= 1)
-							score2++;
-				}
-			}
-		}
-	}
-
-	int score3 = 0;
-
-	for (int i=0; i<board_size; i++){
-		for (int j=1; j<board_size-1; j++){
-			
-			char left_color = board->at(i)->at(j-1);
-			char right_color = board->at(i)->at(j+1);
-			bool left_empty = (left_color == '-');
-			bool right_empty = (right_color == '-');
-			
-			if (board->at(i)->at(j) == '-'){
-				if (left_empty && right_empty){
-					// scan in the colors used vector
-					for (int k=0; k<board_size; k++){
-						if (colors_available->at(k) >= 3)
-							score3++;
-					}
-
-					for (int k=0; k<board_size; k++){
-						if (colors_available->at(k) >= 2){
-							for (int z=0; z<board_size; z++){
-								if ((k != z) && (colors_available->at(z) >= 1))
-									score3++;
-							}
-						}
-					}
-				} else if (left_empty){
-					if (colors_available->at(right_color - 'A') >= 1){
-						// scan in the colors used vector
-						for (int k=0; k<board_size; k++){
-							if ((k == (right_color - 'A')) && (colors_available->at(k) >= 2))
-								score3++;
-							else if (colors_available->at(k) >= 1)
-								score3++;
-						}
-					}
-				} else if (right_empty){
-					if (colors_available->at(left_color - 'A') >= 1){
-						// scan in the colors used vector
-						for (int k=0; k<board_size; k++){
-							if ((k == (left_color - 'A')) && (colors_available->at(k) >= 2))
-								score3++;
-							else if (colors_available->at(k) >= 1)
-								score3++;
-						}
-					}
-				} else if (left_color == right_color){
-					// scan in the colors used vector
-					for (int k=0; k<board_size; k++){
-						if (colors_available->at(k) >= 1)
-							score3++;
-					}
-				}
-			} else {
-				if (left_empty && right_empty){
-					// scan in the colors used vector
-					for (int k=0; k<board_size; k++){
-						if (colors_available->at(k) >= 2)
-							score3++;
-					}
-				} else if (left_empty){
-					if (colors_available->at(right_color - 'A') >= 1)
-						score3++;
-				} else if (right_empty){
-					if (colors_available->at(left_color - 'A') >= 1)
-						score3++;
-				}
-			}
-		}
-	}
-
-	for (int i=1; i<board_size-1; i++){
-		for (int j=0; j<board_size; j++){
-			
-			char left_color = board->at(j)->at(i-1);
-			char right_color = board->at(j)->at(i+1);
-			bool left_empty = (left_color == '-');
-			bool right_empty = (right_color == '-');
-			
-			if (board->at(j)->at(i) == '-'){
-				if (left_empty && right_empty){
-					// scan in the colors used vector
-					for (int k=0; k<board_size; k++){
-						if (colors_available->at(k) >= 3)
-							score3++;
-					}
-
-					for (int k=0; k<board_size; k++){
-						if (colors_available->at(k) >= 2){
-							for (int z=0; z<board_size; z++){
-								if ((k != z) && (colors_available->at(z) >= 1))
-									score3++;
-							}
-						}
-					}
-				} else if (left_empty){
-					if (colors_available->at(right_color - 'A') >= 1){
-						// scan in the colors used vector
-						for (int k=0; k<board_size; k++){
-							if ((k == (right_color - 'A')) && (colors_available->at(k) >= 2))
-								score3++;
-							else if (colors_available->at(k) >= 1)
-								score3++;
-						}
-					}
-				} else if (right_empty){
-					if (colors_available->at(left_color - 'A') >= 1){
-						// scan in the colors used vector
-						for (int k=0; k<board_size; k++){
-							if ((k == (left_color - 'A')) && (colors_available->at(k) >= 2))
-								score3++;
-							else if (colors_available->at(k) >= 1)
-								score3++;
-						}
-					}
-				} else if (left_color == right_color){
-					// scan in the colors used vector
-					for (int k=0; k<board_size; k++){
-						if (colors_available->at(k) >= 1)
-							score3++;
-					}
-				}
-			} else {
-				if (left_empty && right_empty){
-					// scan in the colors used vector
-					for (int k=0; k<board_size; k++){
-						if (colors_available->at(k) >= 2)
-							score3++;
-					}
-				} else if (left_empty){
-					if (colors_available->at(right_color - 'A') >= 1)
-						score3++;
-				} else if (right_empty){
-					if (colors_available->at(left_color - 'A') >= 1)
-						score3++;
-				}
-			}
-		}
-	}
-
-
-	int score = calculateScore() + 2*score2 + 3* score3;
-	return score;
-*/
-	return /*extraHelper() + */calculateScore();
+double Board::evalFunction(){
+	return 0.2 * extraHelper() + 10*calculateScorea()+ 3*calculateScore()/* -0.2245 * calculateScore1() + 0 * num_cells_free*/;
+}
+double Board::evalFunction1(){
+	return 10*calculateScorea() + 2 * calculateScore() /*- 0.2245 * calculateScore1() + 0 * num_cells_free*/;
 }

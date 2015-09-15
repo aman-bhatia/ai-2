@@ -5,7 +5,8 @@
  */
 Game::Game(int _board_size){
 	board = new Board(_board_size);
-	globalcutoff = 3;
+	globalcutoff_order = 3;
+	globalcutoff_chaos = 3;
 }
 
 Game::~Game()
@@ -63,6 +64,7 @@ void Game::makeOrderMove(pair< Coord, Coord> move){
 
 pair< Move , double > Game::orderHelper(Board& b , int cutoff, double alpha , double beta)
 {
+	//The maximum possible score for any board is 150
 	if(cutoff == 0 or b.isGameOver())
 		return (make_pair( (  make_pair( make_pair(0,0) , make_pair(0,0) )  ) , b.evalFunction()));
 	vector<Board> possible_boards;
@@ -99,6 +101,7 @@ pair< Move , double > Game::orderHelper(Board& b , int cutoff, double alpha , do
 	for(int i = 0 ; i < possible_boards.size() ; ++i)
 	{
 		double expectedvalue = 0;
+		//int over_colors = 0;
 		for(int c = 0 ; c < 5 ; ++c)
 		{
 			if(colorsused[c] != 5)
@@ -107,7 +110,10 @@ pair< Move , double > Game::orderHelper(Board& b , int cutoff, double alpha , do
 				double probintoscore = 0;
 				if (temp.second != -1.0)
 					probintoscore = (temp.second * (double(5 - colorsused[c]) / totalcolorsremaining));
+				//over_colors += 5 - colorsused[c];
 				expectedvalue += probintoscore;
+				//if((expectedvalue + (150 * (totalcolorsremaining - over_colors) / totalcolorsremaining)) <= alpha)
+				//	break;
 			}
 		}
 		alpha = max(alpha , expectedvalue);
@@ -132,7 +138,7 @@ pair< Move , double > Game::orderHelper(Board& b , int cutoff, double alpha , do
 pair < Coord , double > Game::chaosHelper(Board& b , int cutoff , char col , double alpha , double  beta)
 {
 	if(cutoff == 0 or b.isGameOver())
-		return make_pair(make_pair(0,0) , b.evalFunction());
+		return make_pair(make_pair(0,0) , b.evalFunction1());
 	double minscore = 10000000;
 	int mini = -1 , minj = -1;
 	for(int i = 0 ; i < b.getBoardSize() ; ++i)
@@ -166,13 +172,17 @@ pair < Coord , double > Game::chaosHelper(Board& b , int cutoff , char col , dou
 
 Move Game::orderAIAction()
 {
-	  pair < Move , double > result = orderHelper(*board , this->globalcutoff , -(pow(2 , 40)) , (pow(2 , 40)));
+	  pair < Move , double > result = orderHelper(*board , this->globalcutoff_order , -(pow(2 , 40)) , (pow(2 , 40)));
 	  return result.first;
 }
 
 Coord Game::chaosAIAction(char color)
 {
-	pair < Coord , double > result = chaosHelper(*board , this->globalcutoff, color , -(pow(2 , 40)) , (pow(2 , 40)));
+	pair < Coord , double > result;
+	if (board->getNumCellsFree() < 10)
+		result = chaosHelper(*board , this->globalcutoff_chaos + 1, color , -(pow(2 , 40)) , (pow(2 , 40)));
+	else
+		result = chaosHelper(*board , this->globalcutoff_chaos, color , -(pow(2 , 40)) , (pow(2 , 40)));
 	return result.first;
 }
 

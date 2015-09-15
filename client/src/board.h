@@ -10,8 +10,8 @@ class Board{
 		int board_size;
 		vector< vector<char>* >* board;
 		//vector<int>* colors_available;
-		//int num_cells_free;
-		vector< vector<int>* >* weights;
+		int num_cells_free;
+		vector< vector<double>* >* weights;
 
 	public:
 		Board(int _board_size);
@@ -26,12 +26,18 @@ class Board{
 		void moveColor(int i, int j, int p, int q);
 		bool isOk(int x , int m , string &s);
 		int scoreHelper(string &s);
-		int extraHelper();
+		double scoreHelper1(string &s , int row , bool isrow);
+		double extraHelper();
 		int calculateScore();
-		//int getNumCellsFree() const;
+		int calculateScorea();
+		double calculateScore1();
+		int alternato(string& s);
+		int getNumCellsFree() const;
 		int getWeight(int i, int j) const;
+		void setWeight(int i , int j , int w);
 		//int getColorAvailable(int index) const;
-		int evalFunction();
+		double evalFunction();
+		double evalFunction1();
 };
 
 
