@@ -7,8 +7,6 @@ This is the part of the mega AI-championship in the course [Artificial Intellige
 
 Before going further, please read the few simple rules of the game.
 
-### A Snapshot of server cli ###
-![Snap1](https://dl.dropboxusercontent.com/u/35429234/Screen%20Shot%202015-08-25%20at%204.05.03%20am.png)
 
 ### Problem statement for an AI developer ###
 * Write a program in any language of your choice which has the following I/O specs:
